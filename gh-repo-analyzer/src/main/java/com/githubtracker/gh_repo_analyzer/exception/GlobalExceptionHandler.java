@@ -21,4 +21,11 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(404, e.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException e) {
+        ErrorResponse errorResponse = new ErrorResponse(429, e.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.githubtracker.gh_repo_analyzer.ghClient;
 
+import com.githubtracker.gh_repo_analyzer.exception.RateLimitExceededException;
 import com.githubtracker.gh_repo_analyzer.exception.ResourceNotFoundException;
 import com.githubtracker.gh_repo_analyzer.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,16 +21,17 @@ public class GitHubClient {
 
     public List<GitHubRepository> getUserRepositories(String username) {
         try {
-            GitHubRepository[] repositories =  restTemplate.getForObject(
+            GitHubRepository[] repositories = restTemplate.getForObject(
                     baseUrl + "/users/{username}/repos",
                     GitHubRepository[].class,
                     username
             );
             return Arrays.asList(repositories);
-        }
-        catch (HttpClientErrorException exception) {
+        } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new UserNotFoundException("User '"+username+"' not found");
+                throw new UserNotFoundException("User '" + username + "' not found");
+            } else if (exception.getStatusCode() == HttpStatus.FORBIDDEN) {
+                throw new RateLimitExceededException("API rate limit exceeded");
             }
             throw exception;
         }
@@ -47,6 +49,8 @@ public class GitHubClient {
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new ResourceNotFoundException("User or repository not found");
+            } else if (exception.getStatusCode() == HttpStatus.FORBIDDEN) {
+                throw new RateLimitExceededException("API rate limit exceeded");
             }
             throw exception;
         }
